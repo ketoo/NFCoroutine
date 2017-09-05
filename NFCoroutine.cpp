@@ -77,6 +77,7 @@ void NFCoroutineSchdule::Yield()
 
 int NFCoroutineSchdule::Create(Function func, void *arg)
 {
+    //创建的时候，其实应该创建2个协程，一个开启新循环，因为之前0的那个blocking等待子协程返回
     int id = 0;
     for(; id < this->mnMaxIndex; ++id )
     {
