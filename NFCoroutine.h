@@ -1,5 +1,5 @@
-#ifndef MY_UTHREAD_H
-#define MY_UTHREAD_H
+#ifndef NF_COROUTINE_MDULE
+#define NF_COROUTINE_MDULE
 
 #ifdef __APPLE__
 #define _XOPEN_SOURCE
@@ -7,40 +7,46 @@
 
 #include <ucontext.h>
 #include <vector>
+#include <list>
 
-#define MAX_TASK_STACK_SZIE (1024*128)
-#define MAX_COROUTINE_SIZE   1024 * 128
+#define MAX_COROUTINE_STACK_SIZE (1024 * 128)
+#define MAX_COROUTINE_CAPACITY   (1024 * 128)
 
 enum CoroutineState
 {
     FREE,
-    RUNNING,
     SUSPEND
 };
 
+class NFCoroutine;
 class NFCoroutineSchdule;
 
 typedef bool (*Function)(void *arg);
 
-static void ExecuteBody(NFCoroutineSchdule *ps);
+static void ExecuteBody(NFCoroutine *ps);
 
 class NFCoroutine
 {
 public:
-    NFCoroutine(int id)
+    NFCoroutine(NFCoroutineSchdule* p, int id)
     {
+        pSchdule = p;
         state = CoroutineState::FREE;
         nID = id;
         nChildID = -1;
+        nParent = -1;
     }
 
-    ucontext_t ctx;
     Function func;
     void *arg;
     enum CoroutineState state;
     int nID;
     int nChildID;
-    char stack[MAX_TASK_STACK_SZIE];
+    int nParent;
+    NFCoroutineSchdule* pSchdule;
+
+    ucontext_t ctx;
+    char stack[MAX_COROUTINE_STACK_SIZE];
 };
 
 class NFCoroutineSchdule
@@ -53,6 +59,7 @@ public:
     virtual ~NFCoroutineSchdule();
 
     int  Create(Function func, void *arg);
+    void Init(Function func, void *arg);
 
     void Yield();
 
@@ -63,19 +70,27 @@ public:
 
     int GetRunningID();
     void SetRunningID(int id);
+    void RemoveRuningID(int id);
+
     NFCoroutine* GetCoroutine(int id);
     NFCoroutine* GetRunningCoroutine();
 
-    int GetLastRunningID();
-    void SetLastRunningID(int id);
-    NFCoroutine* GetLastCoroutine();
+protected:
+    int  CreateChildCo(Function func, void *arg);
+
+    NFCoroutine* AllotCoroutine();
+    NFCoroutine* NewMainCoroutine();
 
 protected:
     ucontext_t main;
     int mnRunningCoroutineID;
-    int mnLastCoroutineID;
     std::vector<NFCoroutine*> mxCoroutineList;
-    int mnMaxIndex;//使用了的数量，减少调度时的循环
+    std::list<int> mxRunningList;
+    int mnMaxIndex;
+
+    //init
+    Function mainFunc;
+    void* mainArg;
 };
 
 

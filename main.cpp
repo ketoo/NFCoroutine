@@ -60,14 +60,13 @@ bool test(void *arg)
 
                 std::cout << "func end running: " << scheduleModule.GetRunningID() << std::endl;
 
-                return true;
+                break;
             }
 
             readData.append(buff, n);
         }
 
 
-        std::cout << "before running: " << scheduleModule.GetRunningID() << std::endl;
         scheduleModule.Yield();
     }
 
@@ -78,30 +77,39 @@ bool test(void *arg)
 
 void DoBusiness1(void * arg)
 {
-    puts("22");
 
+    static int count = 0;
     sendMessage("1");
 
-    std::cout << "DoBusiness1 running: " << scheduleModule.GetRunningID() << std::endl;
+    if (count < 4)
+    {
+        count++;
 
-    scheduleModule.Create(test, &scheduleModule);
+        int iooo = time(0);
 
-    std::cout << "after DoBusiness1 running: " << scheduleModule.GetRunningID() << std::endl;
+        std::cout << "count: " << count << std::endl;
+        std::cout << "DoBusiness1 running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
 
+        scheduleModule.Create(test, &scheduleModule);
+        scheduleModule.Yield();
+
+        std::cout << "count: " << count << std::endl;
+        std::cout << "=========after DoBusiness1 running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
+    }
 }
 
 bool update(void * arg)
 {
-    while (1)
-    {
-        std::cout << "update begin running: " << scheduleModule.GetRunningID() << std::endl;
+    puts("---------");
+
+    sleep(1);
+
+    std::cout << "update begin running: " << scheduleModule.GetRunningID() << std::endl;
 
 
-        DoBusiness1(arg);
+    //DoBusiness1(arg);
 
-        std::cout << "update end running: " << scheduleModule.GetRunningID() << std::endl;
-
-    }
+    std::cout << "update end running: " << scheduleModule.GetRunningID() << std::endl;
 
     return false;
 }
@@ -111,13 +119,14 @@ bool update(void * arg)
 int main()
 {
 
-    scheduleModule.Create(update, &scheduleModule);
+    scheduleModule.Init(update, &scheduleModule);
 
     while (1)
     {
         scheduleModule.ScheduleJob();
     }
 
+    std::cout << " main over " << std::endl;
 
     return 0;
 }
