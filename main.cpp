@@ -107,7 +107,7 @@ bool update(void * arg)
     std::cout << "update begin running: " << scheduleModule.GetRunningID() << std::endl;
 
 
-    //DoBusiness1(arg);
+    DoBusiness1(arg);
 
     std::cout << "update end running: " << scheduleModule.GetRunningID() << std::endl;
 

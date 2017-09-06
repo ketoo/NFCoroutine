@@ -82,15 +82,20 @@ protected:
     NFCoroutine* NewMainCoroutine();
 
 protected:
-    ucontext_t main;
-    int mnRunningCoroutineID;
-    std::vector<NFCoroutine*> mxCoroutineList;
-    std::list<int> mxRunningList;
-    int mnMaxIndex;
-
-    //init
     Function mainFunc;
     void* mainArg;
+
+    ucontext_t main;
+    int mnRunningCoroutineID;
+
+    std::vector<NFCoroutine*> mxCoroutineList;
+    std::list<int> mxRunningList;
+
+    //init
+
+
+    int mnMaxIndex;
+
 };
 
 
