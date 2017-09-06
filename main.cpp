@@ -39,15 +39,10 @@ int readBuff(char* buff)
     return nLen;
 }
 
-void DoBusiness2(void * arg)
-{
-    std::cout << "DoBusiness 2" << std::endl;
-}
-
 std::string readData;
 bool test(void *arg)
 {
-    std::cout << "DoBusiness 1" << std::endl;
+    std::cout << "DoBusiness" << std::endl;
 
     while (1)
     {
@@ -75,9 +70,8 @@ bool test(void *arg)
 }
 
 
-void DoBusiness1(void * arg)
+void DoBusiness(void *arg)
 {
-
     static int count = 0;
     sendMessage("1");
 
@@ -88,13 +82,13 @@ void DoBusiness1(void * arg)
         int iooo = time(0);
 
         std::cout << "count: " << count << std::endl;
-        std::cout << "DoBusiness1 running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
+        std::cout << "DoBusiness running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
 
         scheduleModule.Create(test, &scheduleModule);
         scheduleModule.Yield();
 
         std::cout << "count: " << count << std::endl;
-        std::cout << "=========after DoBusiness1 running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
+        std::cout << "=========after DoBusiness running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
     }
 }
 
@@ -107,7 +101,7 @@ bool update(void * arg)
     std::cout << "update begin running: " << scheduleModule.GetRunningID() << std::endl;
 
 
-    DoBusiness1(arg);
+    DoBusiness(arg);
 
     std::cout << "update end running: " << scheduleModule.GetRunningID() << std::endl;
 

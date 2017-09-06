@@ -62,6 +62,8 @@ public:
     void Init(Function func, void *arg);
 
     void Yield();
+    //void WaitSecond();
+    //void YieldFrame();
 
     void Resume(int id);
 

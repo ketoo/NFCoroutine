@@ -74,7 +74,8 @@ void NFCoroutineSchdule::Yield()
 
         std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
 
-        RemoveRuningID(this->mnRunningCoroutineID);
+        //RemoveRuningID(this->mnRunningCoroutineID);
+        //mxRunningList.push_back(this->mnRunningCoroutineID);
 
         this->mnRunningCoroutineID = -1;
 
