@@ -19,9 +19,9 @@
 #include <arpa/inet.h>
 
 
-
 std::string strBuff;
-NFCoroutineSchdule scheduleModule;
+NFCoroutineSchedule scheduleModule;
+
 void sendMessage(std::string str)
 {
     strBuff.clear();
@@ -40,7 +40,8 @@ int readBuff(char* buff)
 }
 
 std::string readData;
-bool test(void *arg)
+
+bool test(void* arg)
 {
     std::cout << "DoBusiness" << std::endl;
 
@@ -70,7 +71,7 @@ bool test(void *arg)
 }
 
 
-void DoBusiness(void *arg)
+void DoBusiness(void* arg)
 {
     static int count = 0;
     sendMessage("1");
@@ -88,11 +89,12 @@ void DoBusiness(void *arg)
         scheduleModule.Yield();
 
         std::cout << "count: " << count << std::endl;
-        std::cout << "=========after DoBusiness running: " << scheduleModule.GetRunningID() << " random " << iooo << std::endl;
+        std::cout << "=========after DoBusiness running: " << scheduleModule.GetRunningID() << " random " << iooo
+                  << std::endl;
     }
 }
 
-bool update(void * arg)
+bool update(void* arg)
 {
     puts("---------");
 
@@ -109,7 +111,6 @@ bool update(void * arg)
 }
 
 
-
 int main()
 {
 
@@ -120,7 +121,7 @@ int main()
         scheduleModule.ScheduleJob();
     }
 
-    std::cout << " main over " << std::endl;
+    std::cout << " mxMainCtx over " << std::endl;
 
     return 0;
 }

@@ -3,7 +3,7 @@
 
 #ifdef __APPLE__
 #define _XOPEN_SOURCE
-#endif 
+#endif
 
 #include <ucontext.h>
 #include <vector>
@@ -19,16 +19,17 @@ enum CoroutineState
 };
 
 class NFCoroutine;
-class NFCoroutineSchdule;
 
-typedef bool (*Function)(void *arg);
+class NFCoroutineSchedule;
 
-static void ExecuteBody(NFCoroutine *ps);
+typedef bool (* Function)(void* arg);
+
+static void ExecuteBody(NFCoroutine* ps);
 
 class NFCoroutine
 {
 public:
-    NFCoroutine(NFCoroutineSchdule* p, int id)
+    NFCoroutine(NFCoroutineSchedule* p, int id)
     {
         pSchdule = p;
         state = CoroutineState::FREE;
@@ -38,32 +39,31 @@ public:
     }
 
     Function func;
-    void *arg;
+    void* arg;
     enum CoroutineState state;
     int nID;
     int nChildID;
     int nParent;
-    NFCoroutineSchdule* pSchdule;
+    NFCoroutineSchedule* pSchdule;
 
     ucontext_t ctx;
     char stack[MAX_COROUTINE_STACK_SIZE];
 };
 
-class NFCoroutineSchdule
+class NFCoroutineSchedule
 {
 public:
 
+    NFCoroutineSchedule();
 
-    NFCoroutineSchdule();
-    
-    virtual ~NFCoroutineSchdule();
+    virtual ~NFCoroutineSchedule();
 
-    int  Create(Function func, void *arg);
-    void Init(Function func, void *arg);
+    int Create(Function func, void* arg);
+
+    void Init(Function func, void* arg);
 
     void Yield();
-    //void WaitSecond();
-    //void YieldFrame();
+    void Yield(float time);
 
     void Resume(int id);
 
@@ -71,29 +71,31 @@ public:
 
 
     int GetRunningID();
+
     void SetRunningID(int id);
-    void RemoveRuningID(int id);
+
+    void RemoveRunningID(int id);
 
     NFCoroutine* GetCoroutine(int id);
+
     NFCoroutine* GetRunningCoroutine();
 
 protected:
-    int  CreateChildCo(Function func, void *arg);
+    int CreateChildCo(Function func, void* arg);
 
     NFCoroutine* AllotCoroutine();
+
     NFCoroutine* NewMainCoroutine();
 
 protected:
-    Function mainFunc;
-    void* mainArg;
+    Function mxMainFunc;
+    void* mpMainArg;
 
-    ucontext_t main;
+    ucontext_t mxMainCtx;
     int mnRunningCoroutineID;
 
     std::vector<NFCoroutine*> mxCoroutineList;
     std::list<int> mxRunningList;
-
-    //init
 
 
     int mnMaxIndex;

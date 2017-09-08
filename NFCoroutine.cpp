@@ -2,7 +2,7 @@
 #include "NFCoroutine.h"
 
 
-void ExecuteBody(NFCoroutine *co)
+void ExecuteBody(NFCoroutine* co)
 {
 
     std::cout << "ExecuteBody " << co->nID << std::endl;
@@ -18,7 +18,7 @@ void ExecuteBody(NFCoroutine *co)
     }
 
     co->state = FREE;
-    co->pSchdule->RemoveRuningID(co->nID);
+    co->pSchdule->RemoveRunningID(co->nID);
 
     std::cout << "func finished -- swap " << co->nID << " to " << co->nParent << std::endl;
 
@@ -28,7 +28,7 @@ void ExecuteBody(NFCoroutine *co)
     co->nParent = -1;
 }
 
-NFCoroutineSchdule::NFCoroutineSchdule()
+NFCoroutineSchedule::NFCoroutineSchedule()
 {
     mnRunningCoroutineID = -1;
     mnMaxIndex = 0;
@@ -39,7 +39,7 @@ NFCoroutineSchdule::NFCoroutineSchdule()
     }
 }
 
-NFCoroutineSchdule::~NFCoroutineSchdule()
+NFCoroutineSchedule::~NFCoroutineSchedule()
 {
     for (int i = 0; i < MAX_COROUTINE_CAPACITY; i++)
     {
@@ -47,52 +47,54 @@ NFCoroutineSchdule::~NFCoroutineSchdule()
     }
 }
 
-void NFCoroutineSchdule::Resume(int id)
+void NFCoroutineSchedule::Resume(int id)
 {
-    if(id < 0 || id >= this->mnMaxIndex)
+    if (id < 0 || id >= this->mnMaxIndex)
     {
         return;
     }
 
-    NFCoroutine *t = GetCoroutine(id);
+    NFCoroutine* t = GetCoroutine(id);
     if (t->state == SUSPEND)
     {
         std::cout << this->mnRunningCoroutineID << " swap to " << id << std::endl;
 
         this->mnRunningCoroutineID = id;
-        swapcontext(&(this->main),&(t->ctx));
+        swapcontext(&(this->mxMainCtx), &(t->ctx));
     }
 }
 
-void NFCoroutineSchdule::Yield()
+void NFCoroutineSchedule::Yield()
 {
-    if(this->mnRunningCoroutineID != -1 )
+    if (this->mnRunningCoroutineID != -1)
     {
-        NFCoroutine *t = GetRunningCoroutine();
+        NFCoroutine* t = GetRunningCoroutine();
         t->state = SUSPEND;
 
 
         std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
 
-        //RemoveRuningID(this->mnRunningCoroutineID);
-        //mxRunningList.push_back(this->mnRunningCoroutineID);
-
         this->mnRunningCoroutineID = -1;
 
 
-        swapcontext(&(t->ctx), &(main));
+        swapcontext(&(t->ctx), &(mxMainCtx));
     }
 }
 
-void NFCoroutineSchdule::Init(Function func, void *arg)
+void NFCoroutineSchedule::Yield(float time)
 {
-    mainFunc = func;
-    mainArg = arg;
+
+}
+
+void NFCoroutineSchedule::Init(Function func, void* arg)
+{
+    mxMainFunc = func;
+    mpMainArg = arg;
 
     NewMainCoroutine();
 }
 
-int NFCoroutineSchdule::Create(Function func, void *arg)
+int NFCoroutineSchedule::Create(Function func, void* arg)
 {
     //创建的时候，其实应该创建2个协程，一个开启新循环，因为之前0的那个blocking等待子协程返回
 
@@ -112,7 +114,7 @@ int NFCoroutineSchdule::Create(Function func, void *arg)
 }
 
 
-void NFCoroutineSchdule::ScheduleJob()
+void NFCoroutineSchedule::ScheduleJob()
 {
     if (mxRunningList.size() > 0)
     {
@@ -123,36 +125,35 @@ void NFCoroutineSchdule::ScheduleJob()
 
         //必须是子协程才可以调度
         //父协程在子协成结束后，也可以调度
-        if(pCoroutine->state == SUSPEND
-           && pCoroutine->nChildID < 0)
+        if (pCoroutine->state == SUSPEND
+            && pCoroutine->nChildID < 0)
         {
             mxRunningList.push_back(id);
 
             Resume(id);
         }
-    }
-    else
+    } else
     {
         NewMainCoroutine();
     }
 }
 
-int NFCoroutineSchdule::GetRunningID()
+int NFCoroutineSchedule::GetRunningID()
 {
     return mnRunningCoroutineID;
 }
 
-void NFCoroutineSchdule::SetRunningID(int id)
+void NFCoroutineSchedule::SetRunningID(int id)
 {
     mnRunningCoroutineID = id;
 }
 
-void NFCoroutineSchdule::RemoveRuningID(int id)
+void NFCoroutineSchedule::RemoveRunningID(int id)
 {
     mxRunningList.remove(id);
 }
 
-NFCoroutine* NFCoroutineSchdule::GetCoroutine(int id)
+NFCoroutine* NFCoroutineSchedule::GetCoroutine(int id)
 {
     if (id >= 0 && id < mnMaxIndex)
     {
@@ -162,7 +163,7 @@ NFCoroutine* NFCoroutineSchdule::GetCoroutine(int id)
     return NULL;
 }
 
-NFCoroutine* NFCoroutineSchdule::GetRunningCoroutine()
+NFCoroutine* NFCoroutineSchedule::GetRunningCoroutine()
 {
     if (mnRunningCoroutineID < 0)
     {
@@ -173,12 +174,12 @@ NFCoroutine* NFCoroutineSchdule::GetRunningCoroutine()
 }
 
 
-NFCoroutine* NFCoroutineSchdule::AllotCoroutine()
+NFCoroutine* NFCoroutineSchedule::AllotCoroutine()
 {
     int id = 0;
-    for(; id < this->mnMaxIndex; ++id )
+    for (; id < this->mnMaxIndex; ++id)
     {
-        if(mxCoroutineList[id]->state == FREE)
+        if (mxCoroutineList[id]->state == FREE)
         {
             break;
         }
@@ -192,9 +193,9 @@ NFCoroutine* NFCoroutineSchdule::AllotCoroutine()
     return this->mxCoroutineList[id];
 }
 
-int NFCoroutineSchdule::CreateChildCo(Function func, void *arg)
+int NFCoroutineSchedule::CreateChildCo(Function func, void* arg)
 {
-    NFCoroutine *newCo = AllotCoroutine();
+    NFCoroutine* newCo = AllotCoroutine();
 
     newCo->state = CoroutineState::SUSPEND;
     newCo->func = func;
@@ -206,7 +207,7 @@ int NFCoroutineSchdule::CreateChildCo(Function func, void *arg)
     newCo->ctx.uc_stack.ss_size = MAX_COROUTINE_STACK_SIZE;
     newCo->ctx.uc_stack.ss_flags = 0;
 
-    NFCoroutine * t_running = GetRunningCoroutine();
+    NFCoroutine* t_running = GetRunningCoroutine();
 
     t_running->state = CoroutineState::SUSPEND;
     t_running->nChildID = newCo->nID;
@@ -219,26 +220,25 @@ int NFCoroutineSchdule::CreateChildCo(Function func, void *arg)
     makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
 
 
-
     mxRunningList.push_back(newCo->nID);
 
     return newCo->nID;
 }
 
-NFCoroutine* NFCoroutineSchdule::NewMainCoroutine()
+NFCoroutine* NFCoroutineSchedule::NewMainCoroutine()
 {
     NFCoroutine* newCo = AllotCoroutine();
 
     newCo->state = CoroutineState::SUSPEND;
-    newCo->func = mainFunc;
-    newCo->arg = mainArg;
+    newCo->func = mxMainFunc;
+    newCo->arg = mpMainArg;
 
     getcontext(&(newCo->ctx));
 
     newCo->ctx.uc_stack.ss_sp = newCo->stack;
     newCo->ctx.uc_stack.ss_size = MAX_COROUTINE_STACK_SIZE;
     newCo->ctx.uc_stack.ss_flags = 0;
-    newCo->ctx.uc_link = &(this->main);
+    newCo->ctx.uc_link = &(this->mxMainCtx);
 
     makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
 
