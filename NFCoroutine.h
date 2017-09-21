@@ -55,33 +55,31 @@ public:
 
     virtual ~NFCoroutineSchedule();
 
+    void Init(Function func);
+
     void StartCoroutine();
     void StartCoroutine(Function func);
-
-    void Init(Function func);
+    void RemoveRunningID(int id);
 
     void Yield();
 
-    void Resume(int id);
-
     void ScheduleJob();
-
-
-    int GetRunningID();
-
-    void SetRunningID(int id);
-
-    void RemoveRunningID(int id);
-
-    NFCoroutine* GetCoroutine(int id);
-
-    NFCoroutine* GetRunningCoroutine();
 
 protected:
 
+    void NewMainCoroutine();
+
+    void Resume(int id);
+
+    int GetRunningID();
+    void SetRunningID(int id);
+
     NFCoroutine* AllotCoroutine();
 
-    void NewMainCoroutine();
+    NFCoroutine* GetCoroutine(int id);
+    NFCoroutine* GetRunningCoroutine();
+
+
 
 protected:
     Function mxMainFunc;
