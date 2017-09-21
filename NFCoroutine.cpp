@@ -9,23 +9,13 @@ void ExecuteBody(NFCoroutine* co)
 
     co->func(co->arg);
 
-
-    NFCoroutine* pParentCo = co->pSchdule->GetCoroutine(co->nParent);
-    if (pParentCo)
-    {
-        pParentCo->nChildID = -1;
-        //下一次切换后,就可以调度父协程--不用调度，这个函数执行完毕后，父协程自动接着往下走
-    }
-
     co->state = FREE;
     co->pSchdule->RemoveRunningID(co->nID);
 
-    std::cout << "func finished -- swap " << co->nID << " to " << co->nParent << std::endl;
+    //std::cout << "func finished -- swap " << co->nID << " to " << co->nParent << std::endl;
 
-    co->pSchdule->SetRunningID(co->nParent);
+    //co->pSchdule->SetRunningID(co->nParent);
 
-    co->nChildID = -1;
-    co->nParent = -1;
 }
 
 NFCoroutineSchedule::NFCoroutineSchedule()
@@ -70,7 +60,6 @@ void NFCoroutineSchedule::Yield()
         NFCoroutine* t = GetRunningCoroutine();
         t->state = SUSPEND;
 
-
         std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
 
         this->mnRunningCoroutineID = -1;
@@ -98,22 +87,6 @@ void NFCoroutineSchedule::StartCoroutine(Function func)
     func(this);
 }
 
-void NFCoroutineSchedule::StartChildCoroutine(Function func)
-{
-    //创建的时候，其实应该创建2个协程，一个开启新循环，因为之前0的那个blocking等待子协程返回
-
-    NFCoroutine* pRunningCo = GetRunningCoroutine();
-    if (pRunningCo->nParent >= 0
-        && pRunningCo->nChildID >= 0)
-    {
-        return;
-    }
-
-    CreateChildCo(func, this);
-    NewMainCoroutine();
-}
-
-
 void NFCoroutineSchedule::ScheduleJob()
 {
     if (mxRunningList.size() > 0)
@@ -125,8 +98,7 @@ void NFCoroutineSchedule::ScheduleJob()
 
         //必须是子协程才可以调度
         //父协程在子协成结束后，也可以调度
-        if (pCoroutine->state == SUSPEND
-            && pCoroutine->nChildID < 0)
+        if (pCoroutine->state == SUSPEND)
         {
             mxRunningList.push_back(id);
 
@@ -194,42 +166,15 @@ NFCoroutine* NFCoroutineSchedule::AllotCoroutine()
     return this->mxCoroutineList[id];
 }
 
-int NFCoroutineSchedule::CreateChildCo(Function func, void* arg)
-{
-    NFCoroutine* newCo = AllotCoroutine();
-
-    newCo->state = CoroutineState::SUSPEND;
-    newCo->func = func;
-    newCo->arg = arg;
-
-    getcontext(&(newCo->ctx));
-
-    newCo->ctx.uc_stack.ss_sp = newCo->stack;
-    newCo->ctx.uc_stack.ss_size = MAX_COROUTINE_STACK_SIZE;
-    newCo->ctx.uc_stack.ss_flags = 0;
-
-    NFCoroutine* t_running = GetRunningCoroutine();
-
-    t_running->state = CoroutineState::SUSPEND;
-    t_running->nChildID = newCo->nID;
-    newCo->nParent = t_running->nID;
-    newCo->ctx.uc_link = &(t_running->ctx);
-
-
-    std::cout << "create new co " << newCo->nID << std::endl;
-
-    makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
-
-
-    mxRunningList.push_back(newCo->nID);
-
-    return newCo->nID;
-}
-
-NFCoroutine* NFCoroutineSchedule::NewMainCoroutine()
+void NFCoroutineSchedule::NewMainCoroutine()
 {
 
     NFCoroutine* newCo = AllotCoroutine();
+    if (newCo == NULL)
+    {
+        return;
+    }
+
     mxRunningList.push_back(newCo->nID);
     std::cout << "create NewMainCoroutine " << newCo->nID << std::endl;
 

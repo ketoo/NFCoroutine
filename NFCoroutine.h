@@ -35,16 +35,12 @@ public:
         pSchdule = p;
         state = CoroutineState::FREE;
         nID = id;
-        nChildID = -1;
-        nParent = -1;
     }
 
     Function func;
     void* arg;
     enum CoroutineState state;
     int nID;
-    int nChildID;
-    int nParent;
     NFCoroutineSchedule* pSchdule;
 
     ucontext_t ctx;
@@ -61,7 +57,6 @@ public:
 
     void StartCoroutine();
     void StartCoroutine(Function func);
-    void StartChildCoroutine(Function func);
 
     void Init(Function func);
 
@@ -83,11 +78,10 @@ public:
     NFCoroutine* GetRunningCoroutine();
 
 protected:
-    int CreateChildCo(Function func, void* arg);
 
     NFCoroutine* AllotCoroutine();
 
-    NFCoroutine* NewMainCoroutine();
+    void NewMainCoroutine();
 
 protected:
     Function mxMainFunc;
