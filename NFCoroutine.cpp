@@ -58,7 +58,6 @@ void NFCoroutineSchedule::Resume(int id)
     if (t->state == SUSPEND)
     {
         std::cout << this->mnRunningCoroutineID << " swap to " << id << std::endl;
-
         this->mnRunningCoroutineID = id;
         swapcontext(&(this->mxMainCtx), &(t->ctx));
     }
@@ -76,25 +75,30 @@ void NFCoroutineSchedule::Yield()
 
         this->mnRunningCoroutineID = -1;
 
-
         swapcontext(&(t->ctx), &(mxMainCtx));
     }
 }
 
-void NFCoroutineSchedule::Yield(float time)
-{
-
-}
-
-void NFCoroutineSchedule::Init(Function func, void* arg)
+void NFCoroutineSchedule::Init(Function func)
 {
     mxMainFunc = func;
-    mpMainArg = arg;
+    mpMainArg = this;
 
     NewMainCoroutine();
 }
 
-int NFCoroutineSchedule::Create(Function func, void* arg)
+void NFCoroutineSchedule::StartCoroutine()
+{
+    NewMainCoroutine();
+}
+
+void NFCoroutineSchedule::StartCoroutine(Function func)
+{
+    NewMainCoroutine();
+    func(this);
+}
+
+void NFCoroutineSchedule::StartChildCoroutine(Function func)
 {
     //创建的时候，其实应该创建2个协程，一个开启新循环，因为之前0的那个blocking等待子协程返回
 
@@ -102,15 +106,11 @@ int NFCoroutineSchedule::Create(Function func, void* arg)
     if (pRunningCo->nParent >= 0
         && pRunningCo->nChildID >= 0)
     {
-        return -1;
+        return;
     }
 
-
-    int id = CreateChildCo(func, arg);
+    CreateChildCo(func, this);
     NewMainCoroutine();
-
-
-    return id;
 }
 
 
@@ -132,7 +132,8 @@ void NFCoroutineSchedule::ScheduleJob()
 
             Resume(id);
         }
-    } else
+    }
+    else
     {
         NewMainCoroutine();
     }
@@ -227,7 +228,10 @@ int NFCoroutineSchedule::CreateChildCo(Function func, void* arg)
 
 NFCoroutine* NFCoroutineSchedule::NewMainCoroutine()
 {
+
     NFCoroutine* newCo = AllotCoroutine();
+    mxRunningList.push_back(newCo->nID);
+    std::cout << "create NewMainCoroutine " << newCo->nID << std::endl;
 
     newCo->state = CoroutineState::SUSPEND;
     newCo->func = mxMainFunc;
@@ -241,8 +245,4 @@ NFCoroutine* NFCoroutineSchedule::NewMainCoroutine()
     newCo->ctx.uc_link = &(this->mxMainCtx);
 
     makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
-
-    mxRunningList.push_back(newCo->nID);
-
-    std::cout << "create NewMainCoroutine " << newCo->nID << std::endl;
 }

@@ -18,11 +18,12 @@ enum CoroutineState
     SUSPEND
 };
 
+
 class NFCoroutine;
 
 class NFCoroutineSchedule;
 
-typedef bool (* Function)(void* arg);
+typedef void (* Function)(void* arg);
 
 static void ExecuteBody(NFCoroutine* ps);
 
@@ -58,12 +59,13 @@ public:
 
     virtual ~NFCoroutineSchedule();
 
-    int Create(Function func, void* arg);
+    void StartCoroutine();
+    void StartCoroutine(Function func);
+    void StartChildCoroutine(Function func);
 
-    void Init(Function func, void* arg);
+    void Init(Function func);
 
     void Yield();
-    void Yield(float time);
 
     void Resume(int id);
 
