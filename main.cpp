@@ -1,21 +1,23 @@
-#include "NFCoroutine.h"
 #include <iostream>
-#include <zconf.h>
+#include <chrono>
+#include <thread>
+#include "NFCoroutineManager.h"
 
-NFCoroutineSchedule scheduleModule;
+
+NFCoroutineManager mxCoroutineManager;
 
 void DoBusiness()
 {
-    scheduleModule.StartCoroutine();
+    mxCoroutineManager.StartCoroutine();
 
     int i = 0;
     std::cout << "---test " << i << std::endl;
-    scheduleModule.Yield();
+    mxCoroutineManager.Yield();
 
     i++;
     std::cout << "---test " << i << std::endl;
 
-    scheduleModule.Yield();
+    mxCoroutineManager.Yield();
 
     i++;
     std::cout << "---test " << i << std::endl;
@@ -23,29 +25,24 @@ void DoBusiness()
 
 }
 
-void update(void* arg)
+void CoroutineExecute(void* arg)
 {
-    puts("---------");
-
-    sleep(1);
-
+    std::cout << "CoroutineExecute" << std::endl;
     DoBusiness();
-}
 
+    //NFCPluginManager::Instance()->Execute();
+}
 
 int main()
 {
-    srand((unsigned)time(0));
 
-    scheduleModule.Init(update);
+    mxCoroutineManager.Init(CoroutineExecute);
 
     while (1)
     {
-        scheduleModule.ScheduleJob();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        mxCoroutineManager.ScheduleJob();
     }
-
-    std::cout << " mxMainCtx over " << std::endl;
-
+    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
-
