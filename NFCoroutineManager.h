@@ -9,15 +9,14 @@
 #ifndef NF_COROUTINE_MANAGER_H
 #define NF_COROUTINE_MANAGER_H
 
+#include <thread>
+#include <vector>
+#include <list>
+#include <iostream>
+
 #ifdef __APPLE__
 #define _XOPEN_SOURCE
 #endif
-
-#include <iostream>
-#include <ucontext.h>
-#include <vector>
-#include <list>
-
 
 #define NF_TEST
 
@@ -28,14 +27,25 @@
 
 #define  NF_PLATFORM NF_PLATFORM_APPLE
 
+//millisecond
+inline int64_t NFGetTimeMS()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 typedef void (* CoroutineFunction)(void* arg);
 #else
 #include "NFComm/NFPluginModule/NFIModule.h"
+#include "NFComm/NFCore/NFSingleton.hpp"
+#endif
+
+#if NF_PLATFORM != NF_PLATFORM_WIN
+#include <ucontext.h>
 #endif
 
 
 #define MAX_COROUTINE_STACK_SIZE (1024 * 128)
-#define MAX_COROUTINE_CAPACITY   (1024 * 128)
+#define MAX_COROUTINE_CAPACITY   (1024 * 1)
 
 enum CoroutineState
 {
@@ -48,6 +58,7 @@ class NFCoroutine;
 
 class NFCoroutineManager;
 
+
 class NFCoroutine
 {
 public:
@@ -56,9 +67,11 @@ public:
         pSchdule = p;
         state = CoroutineState::FREE;
         nID = id;
+        nYieldTime = 0;
     }
 
     CoroutineFunction func;
+    uint64_t nYieldTime;
     void* arg;
     enum CoroutineState state;
     int nID;
@@ -83,9 +96,12 @@ public:
 
     void StartCoroutine();
     void StartCoroutine(CoroutineFunction func);
+
     void RemoveRunningID(int id);
 
-    void Yield();
+    void YieldCo(const float fSecond);
+
+    void YieldCo();
 
     void ScheduleJob();
 
@@ -117,6 +133,7 @@ protected:
     std::list<int> mxRunningList;
 
     int mnMaxIndex;
+    int mnMainCoID;
 
 };
 

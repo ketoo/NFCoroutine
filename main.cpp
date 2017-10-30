@@ -12,12 +12,12 @@ void DoBusiness()
 
     int i = 0;
     std::cout << "---test " << i << std::endl;
-    mxCoroutineManager.Yield();
+    mxCoroutineManager.YieldCo(10);
 
     i++;
     std::cout << "---test " << i << std::endl;
 
-    mxCoroutineManager.Yield();
+    mxCoroutineManager.YieldCo();
 
     i++;
     std::cout << "---test " << i << std::endl;
@@ -41,6 +41,9 @@ int main()
     while (1)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        std::cout << "sleep-" << std::endl;
+
         mxCoroutineManager.ScheduleJob();
     }
     std::cout << "Hello, World!" << std::endl;

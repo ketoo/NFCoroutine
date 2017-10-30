@@ -6,7 +6,6 @@
 //    @Desc             :
 // -------------------------------------------------------------------------
 
-
 #include "NFCoroutineManager.h"
 
 void ExecuteBody(NFCoroutine* co)
@@ -18,11 +17,16 @@ void ExecuteBody(NFCoroutine* co)
     co->state = FREE;
     co->pSchdule->RemoveRunningID(co->nID);
 
+
+
     //std::cout << "func finished -- swap " << co->nID << " to -1" << std::endl;
 }
 
 NFCoroutineManager::NFCoroutineManager()
 {
+    std::cout << "threadid " << std::this_thread::get_id() << std::endl;
+
+    mnMainCoID = -1;
     mnRunningCoroutineID = -1;
     mnMaxIndex = 0;
 
@@ -30,6 +34,8 @@ NFCoroutineManager::NFCoroutineManager()
     {
         mxCoroutineList.push_back(new NFCoroutine(this, i));
     }
+
+    std::cout << "created Coroutine number: " << MAX_COROUTINE_CAPACITY <<std::endl;
 }
 
 NFCoroutineManager::~NFCoroutineManager()
@@ -61,7 +67,7 @@ void NFCoroutineManager::Resume(int id)
 #endif
 }
 
-void NFCoroutineManager::Yield()
+void NFCoroutineManager::YieldCo()
 {
 #if NF_PLATFORM != NF_PLATFORM_WIN
     if (this->mnRunningCoroutineID != -1)
@@ -69,7 +75,7 @@ void NFCoroutineManager::Yield()
         NFCoroutine* t = GetRunningCoroutine();
         t->state = SUSPEND;
 
-        //std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
+        std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
 
         this->mnRunningCoroutineID = -1;
 
@@ -161,6 +167,7 @@ NFCoroutine* NFCoroutineManager::GetRunningCoroutine()
 
 NFCoroutine* NFCoroutineManager::AllotCoroutine()
 {
+
     int id = 0;
     for (; id < mnMaxIndex; ++id)
     {
@@ -190,6 +197,7 @@ void NFCoroutineManager::NewMainCoroutine()
 
     mxRunningList.push_back(newCo->nID);
     //std::cout << "create NewMainCoroutine " << newCo->nID << std::endl;
+    mnMainCoID = newCo->nID;
 
     newCo->state = CoroutineState::SUSPEND;
     newCo->func = mxMainFunc;
@@ -204,5 +212,30 @@ void NFCoroutineManager::NewMainCoroutine()
 
     makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
 
+#endif
+}
+
+void NFCoroutineManager::YieldCo(const float fSecond)
+{
+#if NF_PLATFORM == NF_PLATFORM_WIN
+    NFSLEEP(nMilliSecond);
+#else
+    if (this->mnRunningCoroutineID != -1)
+    {
+        NFCoroutine* t = GetRunningCoroutine();
+        t->nYieldTime = fSecond * 1000 + NFGetTimeMS();
+
+        while (1)
+        {
+            if (NFGetTimeMS() >= t->nYieldTime)
+            {
+                break;
+            }
+            else
+            {
+                YieldCo();
+            }
+        }
+    }
 #endif
 }
