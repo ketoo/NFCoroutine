@@ -1,6 +1,7 @@
 #include "NFCoroutine.h"
 #include <iostream>
 #include <zconf.h>
+#include <thread>
 
 NFCoroutineManager scheduleModule;
 
@@ -32,9 +33,17 @@ void update(void* arg)
     DoBusiness();
 }
 
+void call_from_thread()
+{
+    std::cout << "Hello, thread" << std::endl;
+}
 
 int main()
 {
+    //std::thread t1(call_from_thread);
+    //t1.join();
+
+
     srand((unsigned)time(0));
 
     scheduleModule.Init(update);

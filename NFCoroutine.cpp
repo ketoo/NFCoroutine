@@ -192,7 +192,7 @@ NFCoroutine* NFCoroutineManager::AllotCoroutine()
     }
 
     //new coroutine
-    
+
     return mxCoroutineList[id];
 }
 
