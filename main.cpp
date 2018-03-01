@@ -2,7 +2,7 @@
 #include <iostream>
 #include <zconf.h>
 
-NFCoroutineSchedule scheduleModule;
+NFCoroutineManager scheduleModule;
 
 void DoBusiness()
 {
@@ -10,12 +10,12 @@ void DoBusiness()
 
     int i = 0;
     std::cout << "---test " << i << std::endl;
-    scheduleModule.Yield();
+    scheduleModule.YieldCo();
 
     i++;
     std::cout << "---test " << i << std::endl;
 
-    scheduleModule.Yield();
+    scheduleModule.YieldCo();
 
     i++;
     std::cout << "---test " << i << std::endl;
