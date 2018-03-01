@@ -191,6 +191,8 @@ NFCoroutine* NFCoroutineManager::AllotCoroutine()
         mnMaxIndex++;
     }
 
+    //new coroutine
+    
     return mxCoroutineList[id];
 }
 
