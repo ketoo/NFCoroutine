@@ -23,7 +23,6 @@ void ExecuteBody(NFCoroutine* co)
 NFCoroutineSchedule::NFCoroutineSchedule()
 {
     mnRunningCoroutineID = -1;
-    mnMaxIndex = 0;
     mnMainID = -1;
 
     for (int i = 0; i < MAX_COROUTINE_CAPACITY; i++)
@@ -34,15 +33,17 @@ NFCoroutineSchedule::NFCoroutineSchedule()
 
 NFCoroutineSchedule::~NFCoroutineSchedule()
 {
-    for (int i = 0; i < MAX_COROUTINE_CAPACITY; i++)
+    for (int i = 0; i < mxCoroutineList.size(); i++)
     {
         delete mxCoroutineList[i];
     }
+
+    mxCoroutineList.clear();
 }
 
 void NFCoroutineSchedule::Resume(int id)
 {
-    if (id < 0 || id >= this->mnMaxIndex)
+    if (id < 0 || id >= this->mxCoroutineList.size())
     {
         return;
     }
@@ -119,16 +120,6 @@ void NFCoroutineSchedule::ScheduleJob()
     }
 }
 
-int NFCoroutineSchedule::GetRunningID()
-{
-    return mnRunningCoroutineID;
-}
-
-void NFCoroutineSchedule::SetRunningID(int id)
-{
-    mnRunningCoroutineID = id;
-}
-
 void NFCoroutineSchedule::RemoveRunningID(int id)
 {
     const int lastID = mxRunningList.back();
@@ -144,7 +135,7 @@ void NFCoroutineSchedule::RemoveRunningID(int id)
 
 NFCoroutine* NFCoroutineSchedule::GetCoroutine(int id)
 {
-    if (id >= 0 && id < mnMaxIndex)
+    if (id >= 0 && id < mxCoroutineList.size())
     {
         return mxCoroutineList[id];
     }
@@ -166,7 +157,7 @@ NFCoroutine* NFCoroutineSchedule::GetRunningCoroutine()
 NFCoroutine* NFCoroutineSchedule::AllotCoroutine()
 {
     int id = 0;
-    for (; id < this->mnMaxIndex; ++id)
+    for (; id < this->mxCoroutineList.size(); ++id)
     {
         if (mxCoroutineList[id]->state == FREE)
         {
@@ -174,9 +165,9 @@ NFCoroutine* NFCoroutineSchedule::AllotCoroutine()
         }
     }
 
-    if (id == this->mnMaxIndex)
+    if (id == this->mxCoroutineList.size())
     {
-        this->mnMaxIndex++;
+        this->mxCoroutineList[id] = new NFCoroutine(this, id);
     }
 
     return this->mxCoroutineList[id];
@@ -199,7 +190,6 @@ void NFCoroutineSchedule::NewMainCoroutine()
     newCo->state = CoroutineState::SUSPEND;
     newCo->func = mxMainFunc;
     newCo->arg = mpMainArg;
-    newCo->bYielded = false;
 
     getcontext(&(newCo->ctx));
 

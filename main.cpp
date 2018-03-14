@@ -37,7 +37,6 @@ void update(void* arg)
         DoBusiness();
     }
 
-    return;
 
     int n = rand() % 10;
 

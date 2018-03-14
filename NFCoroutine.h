@@ -9,8 +9,8 @@
 #include <vector>
 #include <list>
 
-#define MAX_COROUTINE_STACK_SIZE (1024 * 128)
-#define MAX_COROUTINE_CAPACITY   (1024 * 1)
+#define MAX_COROUTINE_STACK_SIZE (1024 * 512)
+#define MAX_COROUTINE_CAPACITY   (256 * 1)
 
 enum CoroutineState
 {
@@ -35,14 +35,12 @@ public:
         pSchdule = p;
         state = CoroutineState::FREE;
         nID = id;
-        bYielded = false;
     }
 
     Function func;
     void* arg;
     enum CoroutineState state;
     int nID;
-    bool bYielded;
     NFCoroutineSchedule* pSchdule;
 
     ucontext_t ctx;
@@ -71,9 +69,6 @@ protected:
 
     void Resume(int id);
 
-    int GetRunningID();
-    void SetRunningID(int id);
-
     NFCoroutine* AllotCoroutine();
 
     NFCoroutine* GetCoroutine(int id);
@@ -91,8 +86,6 @@ protected:
     std::vector<NFCoroutine*> mxCoroutineList;
     std::list<int> mxRunningList;
 
-
-    int mnMaxIndex;
     int mnMainID;
 
 };
