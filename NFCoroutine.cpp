@@ -43,6 +43,7 @@ NFCoroutineSchedule::~NFCoroutineSchedule()
 
 void NFCoroutineSchedule::Resume(int id)
 {
+#if NF_PLATFORM != NF_PLATFORM_WIN
     if (id < 0 || id >= this->mxCoroutineList.size())
     {
         return;
@@ -55,10 +56,12 @@ void NFCoroutineSchedule::Resume(int id)
         this->mnRunningCoroutineID = id;
         swapcontext(&(this->mxMainCtx), &(t->ctx));
     }
+#endif
 }
 
 void NFCoroutineSchedule::Yield()
 {
+#if NF_PLATFORM != NF_PLATFORM_WIN
     if (this->mnRunningCoroutineID != -1)
     {
         NFCoroutine* t = GetRunningCoroutine();
@@ -86,6 +89,36 @@ void NFCoroutineSchedule::Yield()
 
         swapcontext(&(t->ctx), &(mxMainCtx));
     }
+#endif
+}
+
+void NFCoroutineSchedule::Yield(const int64_t nSecond)
+{
+#if NF_PLATFORM == NF_PLATFORM_WIN
+    NFSLEEP(fSecond);
+#else
+
+    if (this->mnRunningCoroutineID != -1)
+    {
+        NFCoroutine* t = GetRunningCoroutine();
+        int64_t nTimeMS = NFGetTimeMS();
+        t->nYieldTime = nSecond + nTimeMS;
+        std::cout << nTimeMS << std::endl;
+        while (1)
+        {
+            nTimeMS = NFGetTimeMS();
+            if (nTimeMS >= t->nYieldTime)
+            {
+                std::cout << nTimeMS << std::endl;
+                break;
+            }
+            else
+            {
+                Yield();
+            }
+        }
+    }
+#endif
 }
 
 void NFCoroutineSchedule::Init(Function func)
@@ -98,6 +131,7 @@ void NFCoroutineSchedule::Init(Function func)
 
 void NFCoroutineSchedule::ScheduleJob()
 {
+#if NF_PLATFORM != NF_PLATFORM_WIN
     std::cout << "ScheduleJob, mainID = " << mnMainID << std::endl;
 
     if (mxRunningList.size() > 0 && mnMainID >= 0)
@@ -118,6 +152,9 @@ void NFCoroutineSchedule::ScheduleJob()
     {
         NewMainCoroutine();
     }
+#else
+    mxMainFunc(this);
+#endif
 }
 
 void NFCoroutineSchedule::RemoveRunningID(int id)
@@ -176,6 +213,8 @@ NFCoroutine* NFCoroutineSchedule::AllotCoroutine()
 void NFCoroutineSchedule::NewMainCoroutine()
 {
 
+#if NF_PLATFORM != NF_PLATFORM_WIN
+
     NFCoroutine* newCo = AllotCoroutine();
     if (newCo == NULL)
     {
@@ -190,6 +229,7 @@ void NFCoroutineSchedule::NewMainCoroutine()
     newCo->state = CoroutineState::SUSPEND;
     newCo->func = mxMainFunc;
     newCo->arg = mpMainArg;
+    newCo->nYieldTime = 0;
 
     getcontext(&(newCo->ctx));
 
@@ -199,4 +239,5 @@ void NFCoroutineSchedule::NewMainCoroutine()
     newCo->ctx.uc_link = &(this->mxMainCtx);
 
     makecontext(&(newCo->ctx), (void (*)(void)) (ExecuteBody), 1, newCo);
+#endif
 }
