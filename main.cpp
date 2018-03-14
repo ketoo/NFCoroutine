@@ -1,55 +1,63 @@
 #include "NFCoroutine.h"
 #include <iostream>
-#include <zconf.h>
-#include <thread>
+#include <stdio.h>      /* printf, scanf, puts, NULL */
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
+#include <cstdlib>
+#include <unistd.h>
 
-NFCoroutineManager scheduleModule;
+NFCoroutineSchedule scheduleModule;
 
 void DoBusiness()
 {
-    scheduleModule.StartCoroutine();
-
     int i = 0;
     std::cout << "---test " << i << std::endl;
-    scheduleModule.YieldCo();
+    scheduleModule.Yield();
 
     i++;
     std::cout << "---test " << i << std::endl;
 
-    scheduleModule.YieldCo();
+    scheduleModule.Yield();
 
     i++;
     std::cout << "---test " << i << std::endl;
 
-
+    scheduleModule.Yield();
 }
 
 void update(void* arg)
 {
     puts("---------");
 
-    sleep(1);
 
-    DoBusiness();
+    static bool b = false;
+    if (!b)
+    {
+        b = true;
+        DoBusiness();
+    }
+
+    return;
+
+    int n = rand() % 10;
+
+    if (n == 0 || n == 1 || n == 3 || n == 5 || n == 7 || n == 9)
+    {
+        DoBusiness();
+    }
 }
 
-void call_from_thread()
-{
-    std::cout << "Hello, thread" << std::endl;
-}
 
 int main()
 {
-    //std::thread t1(call_from_thread);
-    //t1.join();
-
-
-    srand((unsigned)time(0));
+    srand (time(NULL));
 
     scheduleModule.Init(update);
 
     while (1)
     {
+
+        sleep(1);
         scheduleModule.ScheduleJob();
     }
 
