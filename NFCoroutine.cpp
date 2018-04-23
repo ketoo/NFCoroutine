@@ -69,19 +69,7 @@ void NFCoroutineSchedule::Yield()
         if (mnMainID == t->nID)
         {
             mnMainID = -1;
-            //NewMainCoroutine();
         }
-/*
-        if (t->state == SUSPEND)
-        {
-            if (!t->bYielded)
-            {
-                t->bYielded = true;
-
-                NewMainCoroutine();
-            }
-        }
-        */
 
         std::cout << "Yield " << this->mnRunningCoroutineID << " to -1" << std::endl;
 
@@ -121,7 +109,7 @@ void NFCoroutineSchedule::Yield(const int64_t nSecond)
 #endif
 }
 
-void NFCoroutineSchedule::Init(Function func)
+void NFCoroutineSchedule::Init(CoroutineFunction func)
 {
     mxMainFunc = func;
     mpMainArg = this;

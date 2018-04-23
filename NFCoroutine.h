@@ -50,7 +50,6 @@ class NFCoroutine;
 
 class NFCoroutineSchedule;
 
-typedef void (* Function)(void* arg);
 
 static void ExecuteBody(NFCoroutine* ps);
 
@@ -65,7 +64,7 @@ public:
         nYieldTime = 0;
     }
 
-    Function func;
+    CoroutineFunction func;
     int64_t nYieldTime;
     void* arg;
     enum CoroutineState state;
@@ -86,7 +85,7 @@ public:
 
     virtual ~NFCoroutineSchedule();
 
-    void Init(Function func);
+    void Init(CoroutineFunction func);
 
     void RemoveRunningID(int id);
 
@@ -110,7 +109,7 @@ protected:
 
 
 protected:
-    Function mxMainFunc;
+    CoroutineFunction mxMainFunc;
     void* mpMainArg;
 
 #if NF_PLATFORM != NF_PLATFORM_WIN
