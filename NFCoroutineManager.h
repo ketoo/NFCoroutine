@@ -48,15 +48,15 @@ enum CoroutineState
 
 class NFCoroutine;
 
-class NFCoroutineSchedule;
+class NFCoroutineManager;
 
 
-static void ExecuteBody(NFCoroutine* ps);
+static void ExecuteBody(NFCoroutineManager* ps);
 
-class NFCoroutine
+class NFCoroutineManager
 {
 public:
-    NFCoroutine(NFCoroutineSchedule* p, int id)
+    NFCoroutineManager(NFCoroutineManager* p, int id)
     {
         pSchdule = p;
         state = CoroutineState::FREE;
@@ -69,7 +69,7 @@ public:
     void* arg;
     enum CoroutineState state;
     int nID;
-    NFCoroutineSchedule* pSchdule;
+    NFCoroutineManager* pSchdule;
 
 #if NF_PLATFORM != NF_PLATFORM_WIN
     ucontext_t ctx;
@@ -77,13 +77,13 @@ public:
     char stack[MAX_COROUTINE_STACK_SIZE];
 };
 
-class NFCoroutineSchedule
+class NFCoroutineManager
 {
 public:
 
-    NFCoroutineSchedule();
+    NFCoroutineManager();
 
-    virtual ~NFCoroutineSchedule();
+    virtual ~NFCoroutineManager();
 
     void Init(CoroutineFunction func);
 
@@ -101,10 +101,10 @@ protected:
 
     void Resume(int id);
 
-    NFCoroutine* AllotCoroutine();
+    NFCoroutineManager* AllotCoroutine();
 
-    NFCoroutine* GetCoroutine(int id);
-    NFCoroutine* GetRunningCoroutine();
+    NFCoroutineManager* GetCoroutine(int id);
+    NFCoroutineManager* GetRunningCoroutine();
 
 
 
@@ -118,7 +118,7 @@ protected:
     int mnRunningCoroutineID;
     int mnMainID;
 
-    std::vector<NFCoroutine*> mxCoroutineList;
+    std::vector<NFCoroutineManager*> mxCoroutineList;
     std::list<int> mxRunningList;
 
 

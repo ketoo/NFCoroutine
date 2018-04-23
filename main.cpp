@@ -1,4 +1,4 @@
-#include "NFCoroutine.h"
+#include "NFCoroutineManager.h"
 #include <iostream>
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-NFCoroutineSchedule scheduleModule;
+NFCoroutineManager scheduleModule;
 
 void DoBusiness(bool b)
 {
