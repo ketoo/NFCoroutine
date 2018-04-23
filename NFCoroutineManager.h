@@ -51,12 +51,12 @@ class NFCoroutine;
 class NFCoroutineManager;
 
 
-static void ExecuteBody(NFCoroutineManager* ps);
+static void ExecuteBody(NFCoroutine* ps);
 
-class NFCoroutineManager
+class NFCoroutine
 {
 public:
-    NFCoroutineManager(NFCoroutineManager* p, int id)
+    NFCoroutine(NFCoroutineManager* p, int id)
     {
         pSchdule = p;
         state = CoroutineState::FREE;
@@ -101,10 +101,10 @@ protected:
 
     void Resume(int id);
 
-    NFCoroutineManager* AllotCoroutine();
+    NFCoroutine* AllotCoroutine();
 
-    NFCoroutineManager* GetCoroutine(int id);
-    NFCoroutineManager* GetRunningCoroutine();
+    NFCoroutine* GetCoroutine(int id);
+    NFCoroutine* GetRunningCoroutine();
 
 
 
@@ -118,7 +118,7 @@ protected:
     int mnRunningCoroutineID;
     int mnMainID;
 
-    std::vector<NFCoroutineManager*> mxCoroutineList;
+    std::vector<NFCoroutine*> mxCoroutineList;
     std::list<int> mxRunningList;
 
 

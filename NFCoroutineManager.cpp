@@ -1,7 +1,7 @@
 #include <iostream>
 #include "NFCoroutineManager.h"
 
-void ExecuteBody(NFCoroutineManager* co)
+void ExecuteBody(NFCoroutine* co)
 {
 
     std::cout << "ExecuteBody " << co->nID << std::endl;
@@ -27,7 +27,7 @@ NFCoroutineManager::NFCoroutineManager()
 
     for (int i = 0; i < MAX_COROUTINE_CAPACITY; i++)
     {
-        mxCoroutineList.push_back(new NFCoroutineManager(this, i));
+        mxCoroutineList.push_back(new NFCoroutine(this, i));
     }
 }
 
@@ -49,7 +49,7 @@ void NFCoroutineManager::Resume(int id)
         return;
     }
 
-    NFCoroutineManager* t = GetCoroutine(id);
+    NFCoroutine* t = GetCoroutine(id);
     if (t->state == SUSPEND)
     {
         std::cout << this->mnRunningCoroutineID << " swap to " << id << std::endl;
@@ -64,7 +64,7 @@ void NFCoroutineManager::Yield()
 #if NF_PLATFORM != NF_PLATFORM_WIN
     if (this->mnRunningCoroutineID != -1)
     {
-        NFCoroutineManager* t = GetRunningCoroutine();
+        NFCoroutine* t = GetRunningCoroutine();
 
         if (mnMainID == t->nID)
         {
@@ -88,7 +88,7 @@ void NFCoroutineManager::Yield(const int64_t nSecond)
 
     if (this->mnRunningCoroutineID != -1)
     {
-        NFCoroutineManager* t = GetRunningCoroutine();
+        NFCoroutine* t = GetRunningCoroutine();
         int64_t nTimeMS = NFGetTimeMS();
         t->nYieldTime = nSecond + nTimeMS;
         std::cout << nTimeMS << std::endl;
@@ -127,7 +127,7 @@ void NFCoroutineManager::ScheduleJob()
         int id = mxRunningList.front();
         mxRunningList.pop_front();
 
-        NFCoroutineManager* pCoroutine = mxCoroutineList[id];
+        NFCoroutine* pCoroutine = mxCoroutineList[id];
 
         if (pCoroutine->state == SUSPEND)
         {
@@ -158,7 +158,7 @@ void NFCoroutineManager::RemoveRunningID(int id)
     }
 }
 
-NFCoroutineManager* NFCoroutineManager::GetCoroutine(int id)
+NFCoroutine* NFCoroutineManager::GetCoroutine(int id)
 {
     if (id >= 0 && id < mxCoroutineList.size())
     {
@@ -168,7 +168,7 @@ NFCoroutineManager* NFCoroutineManager::GetCoroutine(int id)
     return NULL;
 }
 
-NFCoroutineManager* NFCoroutineManager::GetRunningCoroutine()
+NFCoroutine* NFCoroutineManager::GetRunningCoroutine()
 {
     if (mnRunningCoroutineID < 0)
     {
@@ -179,7 +179,7 @@ NFCoroutineManager* NFCoroutineManager::GetRunningCoroutine()
 }
 
 
-NFCoroutineManager* NFCoroutineManager::AllotCoroutine()
+NFCoroutine* NFCoroutineManager::AllotCoroutine()
 {
     int id = 0;
     for (; id < this->mxCoroutineList.size(); ++id)
@@ -192,7 +192,7 @@ NFCoroutineManager* NFCoroutineManager::AllotCoroutine()
 
     if (id == this->mxCoroutineList.size())
     {
-        this->mxCoroutineList[id] = new NFCoroutineManager(this, id);
+        this->mxCoroutineList[id] = new NFCoroutine(this, id);
     }
 
     return this->mxCoroutineList[id];
@@ -203,7 +203,7 @@ void NFCoroutineManager::NewMainCoroutine()
 
 #if NF_PLATFORM != NF_PLATFORM_WIN
 
-    NFCoroutineManager* newCo = AllotCoroutine();
+    NFCoroutine* newCo = AllotCoroutine();
     if (newCo == NULL)
     {
         return;
