@@ -1,72 +1,70 @@
-#include "NFCoroutineManager.h"
+#include <time.h>
 #include <iostream>
-#include <stdio.h>      /* printf, scanf, puts, NULL */
-#include <stdlib.h>     /* srand, rand */
-#include <time.h>       /* time */
-#include <cstdlib>
-#include <unistd.h>
+#include "NFCoroutineManager.hpp"
+#include <chrono>
 
-NFCoroutineManager scheduleModule;
-
-void DoBusiness(bool b)
+void setValue(uint value)
 {
-    int i = 0;
-    std::cout << "---test " << i << std::endl;
-    scheduleModule.Yield();
-
-    if (b)
-    {
-        scheduleModule.Yield(1000 * 5);
-    }
-
-    i++;
-    std::cout << "---test " << i << std::endl;
-
-    scheduleModule.Yield();
-
-    i++;
-    std::cout << "---test " << i << std::endl;
-
-    scheduleModule.Yield();
+    std::cout << " setValue " << value << ", thread id " << std::this_thread::get_id() << std::endl;
 }
 
-void update(void* arg)
+void addValue(uint value)
 {
-    puts("---------");
-
-
-    static bool b = false;
-    if (!b)
-    {
-        b = true;
-        DoBusiness(b);
-    }
-
-return;
-    int n = rand() % 10;
-
-    if (n == 0 || n == 1 || n == 3 || n == 5 || n == 7 || n == 9)
-    {
-        DoBusiness(false);
-    }
+    std::cout << " addValue " << value << ", thread id " << std::this_thread::get_id() << std::endl;
 }
 
-
-int main()
+NFCoroutineTask doSomeThing()
 {
-    srand (time(NULL));
+    std::cout << " doSomeThing " << " thread id " << std::this_thread::get_id() << std::endl;
+}
 
-    scheduleModule.Init(update);
+NFCoroutineTask  loadDataFromMysql()
+{
+    std::cout << time(0) << std::endl;
+    std::cout << " loadDataFromMysql 11"  << " thread id " << std::this_thread::get_id() << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds (3));
 
-    while (1)
+    std::cout << time(0) << std::endl;
+    std::cout << " loadDataFromMysql 22"  << " thread id " << std::this_thread::get_id() << std::endl;
+}
+
+NFCoroutineTask updateEx(NFCoroutineManager* manager)
+{
+    std::cout << time(0) << std::endl;
+    std::cout << " startCoroutine  "  << " thread id " << std::this_thread::get_id() << std::endl;
+
+    co_await manager->StartCoroutine(loadDataFromMysql);
+
+    static int value = 0;
+    setValue(value++);
+
+    std::cout << " startCoroutine(doSomeThing) "  << " thread id " << std::this_thread::get_id() << std::endl;
+
+    co_await manager->StartCoroutine(doSomeThing);
+
+    addValue(value++);
+}
+
+int main(int argc, char* argv[])
+{
+    std::cout << "hardware_concurrency=" << std::thread::hardware_concurrency() << std::endl;
+
+    std::cout << "1" << " thread id " << std::this_thread::get_id() << std::endl;
+
+    NFCoroutineManager manager;
+
+    int count = 0;
+    while (true)
     {
+        count++;
+        if (count % 1000 == 1)
+        {
+            updateEx(&manager);
+        }
 
-        sleep(1);
-        scheduleModule.ScheduleJob();
+        manager.Execute();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
-    std::cout << " mxMainCtx over " << std::endl;
 
     return 0;
-}
-
+};
